@@ -133,13 +133,13 @@ const syncService = {
     loadFromServer: async (showFeedback = false) => {
         const spec = window.db.getSpecialist();
         if (!spec.syncUrl) {
-            if (showFeedback) appUtils.showToast("⚠️ Primero ingresa y guarda la URL de Google Sheets");
+            if (showFeedback) appUtils.showToast("⚠️ Primero ingresa la URL de conexión");
             return;
         }
         
         syncService.isLoading = true;
         const statusEl = document.getElementById('sync-sheets-status');
-        if (statusEl) statusEl.innerHTML = '<span style="color:var(--c-info);">⏳ Conectando con Google Sheets...</span>';
+        if (statusEl) statusEl.innerHTML = '<span style="color:var(--c-info);">⏳ Conectando...</span>';
 
         try {
             const response = await fetch(spec.syncUrl + '?action=getAllData');
@@ -149,7 +149,7 @@ const syncService = {
                 // 1. Sincronizar Turnos
                 if (data.appointments && Array.isArray(data.appointments)) {
                     window.db.saveAppointments(data.appointments);
-                    console.log("✓ Turnos sincronizados desde Google Sheets (" + data.appointments.length + ").");
+                    console.log("✓ Turnos sincronizados (" + data.appointments.length + ").");
                 }
                 
                 // 2. Sincronizar Configuración (Perfil, Servicios, Sedes, Disponibilidad)
@@ -173,7 +173,7 @@ const syncService = {
                     if (data.config.availability && Array.isArray(data.config.availability) && data.config.availability.length > 0) {
                         window.db.saveAvailability(data.config.availability);
                     }
-                    console.log("✓ Base de datos actualizada desde Google Sheets.");
+                    console.log("✓ Base de datos actualizada.");
                 }
 
                 // Refrescar vistas activas
@@ -187,19 +187,19 @@ const syncService = {
                 }
 
                 const timeStr = new Date().toLocaleTimeString();
-                if (statusEl) statusEl.innerHTML = '<span style="color:var(--c-success);">✓ Sincronizado con Google Sheets (' + timeStr + ')</span>';
-                if (showFeedback) appUtils.showToast("✓ Base de datos actualizada desde Google Sheets");
+                if (statusEl) statusEl.innerHTML = '<span style="color:var(--c-success);">✓ Sincronizado (' + timeStr + ')</span>';
+                if (showFeedback) appUtils.showToast("✓ Datos actualizados");
             }
         } catch (error) {
             console.warn("Nota: Sincronización remota:", error);
-            if (statusEl) statusEl.innerHTML = '<span style="color:var(--c-warning);">⚠️ En espera de conexión con Google Sheets</span>';
-            if (showFeedback) appUtils.showToast("⚠️ No se pudo conectar con Google Sheets");
+            if (statusEl) statusEl.innerHTML = '<span style="color:var(--c-warning);">⚠️ En espera de conexión</span>';
+            if (showFeedback) appUtils.showToast("⚠️ No se pudo conectar");
         } finally {
             syncService.isLoading = false;
         }
     },
     
-    // Envía turno nuevo o actualizado a Google Sheets & Calendar
+    // Envía turno nuevo o actualizado a Google Calendar
     saveToServer: async (apt) => {
         const spec = window.db.getSpecialist();
         if (!spec.syncUrl) return;
@@ -211,17 +211,17 @@ const syncService = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(apt)
             });
-            console.log("✓ Turno sincronizado con Google Sheets & Google Calendar.");
+            console.log("✓ Turno sincronizado.");
         } catch (error) {
-            console.error("Error al sincronizar turno con Google:", error);
+            console.error("Error al sincronizar turno:", error);
         }
     },
 
-    // Envía toda la configuración (perfil, servicios, sedes, disponibilidad) a Google Sheets
+    // Envía toda la configuración (perfil, servicios, sedes, disponibilidad)
     saveConfigToServer: async (showFeedback = false) => {
         const spec = window.db.getSpecialist();
         if (!spec.syncUrl) {
-            if (showFeedback) appUtils.showToast("⚠️ Primero ingresa y guarda la URL de Google Sheets");
+            if (showFeedback) appUtils.showToast("⚠️ Primero ingresa la URL de conexión");
             return;
         }
 
@@ -236,7 +236,7 @@ const syncService = {
         };
 
         const statusEl = document.getElementById('sync-sheets-status');
-        if (statusEl) statusEl.innerHTML = '<span style="color:var(--c-info);">⏳ Guardando en Google Sheets...</span>';
+        if (statusEl) statusEl.innerHTML = '<span style="color:var(--c-info);">⏳ Guardando...</span>';
 
         try {
             await fetch(spec.syncUrl, {
@@ -245,14 +245,14 @@ const syncService = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            console.log("✓ Configuración enviada a Google Sheets.");
+            console.log("✓ Configuración enviada.");
             const timeStr = new Date().toLocaleTimeString();
-            if (statusEl) statusEl.innerHTML = '<span style="color:var(--c-success);">✓ Guardado en Google Sheets (' + timeStr + ')</span>';
-            if (showFeedback) appUtils.showToast("✓ Base de datos guardada en tu Google Sheet");
+            if (statusEl) statusEl.innerHTML = '<span style="color:var(--c-success);">✓ Guardado (' + timeStr + ')</span>';
+            if (showFeedback) appUtils.showToast("✓ Guardado correctamente");
         } catch (error) {
-            console.error("Error al guardar config en Google Sheets:", error);
-            if (statusEl) statusEl.innerHTML = '<span style="color:var(--c-danger);">❌ Error al conectar con Google Sheets</span>';
-            if (showFeedback) appUtils.showToast("❌ Error al guardar en Google Sheets");
+            console.error("Error al guardar config:", error);
+            if (statusEl) statusEl.innerHTML = '<span style="color:var(--c-danger);">❌ Error al conectar</span>';
+            if (showFeedback) appUtils.showToast("❌ Error al guardar");
         }
     }
 };

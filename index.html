@@ -449,7 +449,7 @@
                         <div class="db-header">
                             <h3 class="db-title font-heading">Configuración del Perfil Profesional</h3>
                             <button class="btn btn-primary btn-sm" onclick="adminDashboard.saveProfileSettings()">
-                                Guardar Cambios
+                                Guardar
                             </button>
                         </div>
                         
@@ -521,20 +521,17 @@
                                 </div>
                             </div>
 
-                            <!-- Conexión con Google Sheets & Google Calendar -->
+                            <!-- Conexión con Google Calendar & Nube -->
                             <div class="form-group" style="border-top: 1px solid var(--c-border); padding-top: 20px; margin-top: 20px;">
-                                <label for="conf-sync-url" style="font-weight: 700;">URL de Sincronización Google Sheets & Google Calendar [Opcional]</label>
+                                <label for="conf-sync-url" style="font-weight: 700;">Conexión y Sincronización en la Nube [Opcional]</label>
                                 <input type="url" id="conf-sync-url" class="input-ctrl" placeholder="https://script.google.com/macros/s/.../exec">
                                 <p style="font-size: 12px; color: var(--c-text-muted); margin-top: 6px;">
-                                    Al ingresar la URL de tu Google Script, toda tu información (servicios, consultorios, horarios, perfil y fotos) se guarda en tu propia Google Sheet, y los turnos se agendan automáticamente en tu Google Calendar personal.
+                                    Al ingresar tu enlace de Google, tus turnos se agendarán automáticamente en tu Google Calendar y tu información se respaldará de forma segura.
                                 </p>
 
-                                <div style="display: flex; gap: 10px; margin-top: 10px; margin-bottom: 12px; flex-wrap: wrap;">
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="syncService.saveConfigToServer(true)" id="btn-sync-sheets-now">
-                                        ☁️ Guardar Todo en Google Sheets Ahora
-                                    </button>
-                                    <button type="button" class="btn btn-outline btn-sm" onclick="syncService.loadFromServer(true)">
-                                        🔄 Descargar Datos de Google Sheets
+                                <div style="margin-top: 12px; margin-bottom: 8px;">
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="adminDashboard.saveProfileSettings()">
+                                        Guardar
                                     </button>
                                 </div>
                                 <div id="sync-sheets-status" style="font-size: 12.5px; margin-bottom: 10px;"></div>
