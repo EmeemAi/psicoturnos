@@ -56,7 +56,7 @@ function setupSheet() {
 // OBTENER TURNOS (Petición GET)
 function doGet(e) {
     setupSheet();
-    const action = e.parameter.action;
+    const action = (e && e.parameter) ? e.parameter.action : 'getAppointments';
     
     if (action === 'getAppointments') {
         const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -85,13 +85,11 @@ function doGet(e) {
         }
         
         return ContentService.createTextOutput(JSON.stringify(appointments))
-            .setMimeType(ContentService.MimeType.JSON)
-            .setHeader('Access-Control-Allow-Origin', '*');
+            .setMimeType(ContentService.MimeType.JSON);
     }
     
     return ContentService.createTextOutput(JSON.stringify({ error: "Acción no reconocida" }))
-        .setMimeType(ContentService.MimeType.JSON)
-        .setHeader('Access-Control-Allow-Origin', '*');
+        .setMimeType(ContentService.MimeType.JSON);
 }
 
 // GUARDAR O ACTUALIZAR TURNO (Petición POST)
@@ -102,11 +100,14 @@ function doPost(e) {
     
     let data;
     try {
+        if (!e || !e.postData || !e.postData.contents) {
+            return ContentService.createTextOutput(JSON.stringify({ error: "No post data received" }))
+                .setMimeType(ContentService.MimeType.JSON);
+        }
         data = JSON.parse(e.postData.contents);
     } catch(err) {
         return ContentService.createTextOutput(JSON.stringify({ error: "JSON inválido" }))
-            .setMimeType(ContentService.MimeType.JSON)
-            .setHeader('Access-Control-Allow-Origin', '*');
+            .setMimeType(ContentService.MimeType.JSON);
     }
     
     const dataRange = sheet.getDataRange();
@@ -155,8 +156,7 @@ function doPost(e) {
     }
     
     return ContentService.createTextOutput(JSON.stringify({ success: true, calendarEventId: calendarEventId }))
-        .setMimeType(ContentService.MimeType.JSON)
-        .setHeader('Access-Control-Allow-Origin', '*');
+        .setMimeType(ContentService.MimeType.JSON);
 }
 
 // Función auxiliar para crear o actualizar un evento en Google Calendar
