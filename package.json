@@ -1,0 +1,20 @@
+{
+  "name": "psico-turnos",
+  "version": "2.0.0",
+  "description": "PsicoTurnos - Consultorio de Psicología y Agenda Profesional con sincronización de Google Calendar",
+  "main": "index.html",
+  "scripts": {
+    "start": "python server.py",
+    "serve:node": "node server.js",
+    "serve:py": "python server.py"
+  },
+  "keywords": [
+    "psicologia",
+    "turnos",
+    "agenda",
+    "consultorio",
+    "google-calendar"
+  ],
+  "author": "",
+  "license": "MIT"
+}

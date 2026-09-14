@@ -1,0 +1,8 @@
+{
+  "name": "Reserva de Turnos",
+  "description": "Sistema de reserva de turnos con agenda profesional y sincronización con Google Sheets y Google Calendar.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserva de Turnos - Consultorio Psicológico</title>
+    
+    <!-- CSS Custom Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Encabezado Glassmorphic -->
+    <header class="site-header">
+        <div class="container header-inner">
+            <div class="logo-group" onclick="router.navigate('patient')">
+                <div class="logo-circle">🌿</div>
+                <div>
+                    <h1 class="logo-text" id="header-brand-name">Cargando...</h1>
+                    <span class="logo-subtitle">
+                        <span class="badge-active-dot"></span>
+                        <span id="header-brand-specialty">Consultorio de Psicología</span>
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Acciones del Encabezado -->
+            <div class="header-actions">
+                <button class="btn-share-link" onclick="appUtils.copyPatientLink()" title="Copiar enlace directo para enviar a pacientes">
+                    📋 Copiar Link Pacientes
+                </button>
+
+                <!-- Switcher de Vistas -->
+                <div class="view-toggle-container">
+                    <button class="toggle-btn active" id="toggle-patient-btn" onclick="router.navigate('patient')">
+                        👤 Vista Paciente
+                    </button>
+                    <button class="toggle-btn" id="toggle-admin-btn" onclick="router.navigate('admin')">
+                        ⚙️ Panel Profesional
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <!-- ==========================================================================
+             SECCIÓN PACIENTE: RESERVA DE TURNO TERAPÉUTICO
+             ========================================================================== -->
+        <section id="view-patient" class="view-section active animate-fade-in-up">
+            <div class="patient-grid">
+                
+                <!-- Tarjeta del Profesional (Info izquierda) -->
+                <aside class="specialist-card" id="patient-spec-card">
+                    <div class="avatar-wrapper">
+                        <img src="" alt="Foto de la Profesional" class="spec-avatar" id="patient-spec-avatar">
+                        <div class="avatar-badge-verified" title="Profesional Matriculada">✓</div>
+                    </div>
+                    <h2 class="spec-name" id="patient-spec-name">...</h2>
+                    <span class="spec-tag" id="patient-spec-specialty">...</span>
+                    <p class="spec-bio" id="patient-spec-bio">...</p>
+                    
+                    <div class="spec-details-list">
+                        <div class="spec-info-item">
+                            <span class="spec-info-icon">📍</span>
+                            <span id="patient-spec-location">...</span>
+                        </div>
+                        <div class="spec-info-item">
+                            <span class="spec-info-icon">🏢</span>
+                            <span>Atención Presencial y Online (Videollamada)</span>
+                        </div>
+                        <div class="spec-info-item">
+                            <span class="spec-info-icon">✉️</span>
+                            <span id="patient-spec-email">...</span>
+                        </div>
+                        <div class="spec-info-item">
+                            <span class="spec-info-icon">💬</span>
+                            <span id="patient-spec-phone">...</span>
+                        </div>
+                    </div>
+
+                    <div class="confidential-badge">
+                        <span>🔒</span>
+                        <span>Espacio confidencial protegido por secreto profesional.</span>
+                    </div>
+                </aside>
+
+                <!-- Flujo de Reserva (Pasos derecha) -->
+                <article class="booking-container">
+                    <div class="booking-header">
+                        <h3 class="booking-step-title" id="booking-step-title">Seleccionar Servicio</h3>
+                        <div class="step-indicator">
+                            <span class="step-pill active" id="pill-step-1">1. Consulta</span>
+                            <span class="step-pill" id="pill-step-2">2. Fecha y Hora</span>
+                            <span class="step-pill" id="pill-step-3">3. Datos</span>
+                        </div>
+                    </div>
+
+                    <!-- Paso 1: Selección de Servicio -->
+                    <div id="booking-step-1" class="booking-step-content animate-fade-in">
+                        <p class="mb-md text-muted">Elige el tipo de sesión o consulta para el cual deseas agendar tu turno:</p>
+                        <div class="service-list" id="booking-services-list">
+                            <!-- Inyectado dinámicamente -->
+                        </div>
+                        <div class="booking-actions">
+                            <div></div>
+                            <button class="btn btn-primary" id="btn-goto-step2" disabled onclick="bookingFlow.goToStep(2)">
+                                Continuar a Fecha y Hora →
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Paso 2: Selección de Fecha y Hora -->
+                    <div id="booking-step-2" class="booking-step-content hidden animate-fade-in">
+                        <p class="mb-md text-muted">Selecciona el día en el calendario y luego el horario que mejor se adapte a tu agenda:</p>
+                        <div class="calendar-slots-grid">
+                            
+                            <!-- Calendario -->
+                            <div class="calendar-wrapper">
+                                <div class="calendar-header">
+                                    <button class="btn btn-secondary btn-sm" onclick="calendarUI.prevMonth()">‹ Mes anterior</button>
+                                    <span class="calendar-title" id="calendar-month-title">...</span>
+                                    <button class="btn btn-secondary btn-sm" onclick="calendarUI.nextMonth()">Mes siguiente ›</button>
+                                </div>
+                                <div class="calendar-days-header">
+                                    <span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span>
+                                </div>
+                                <div class="calendar-days-grid" id="calendar-days-container">
+                                    <!-- Días inyectados con JS -->
+                                </div>
+                            </div>
+                            
+                            <!-- Horarios disponibles -->
+                            <div class="slots-wrapper">
+                                <div class="slots-title-row">
+                                    <div class="slots-title" id="slots-selected-date-lbl">Selecciona un día</div>
+                                    <div class="slots-subtitle" id="slots-count-lbl"></div>
+                                </div>
+                                <div id="slots-container">
+                                    <div class="no-slots-msg">Por favor, haz clic en un día disponible del calendario para ver las opciones de horario.</div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="booking-actions">
+                            <button class="btn btn-secondary" onclick="bookingFlow.goToStep(1)">← Volver a Servicios</button>
+                            <button class="btn btn-primary" id="btn-goto-step3" disabled onclick="bookingFlow.goToStep(3)">
+                                Continuar con mis Datos →
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Paso 3: Formulario de Datos y Motivo de Consulta -->
+                    <div id="booking-step-3" class="booking-step-content hidden animate-fade-in">
+                        <p class="mb-md text-muted">Completa tu información para confirmar tu reserva en el consultorio:</p>
+                        <form id="booking-form" onsubmit="bookingFlow.submitBooking(event)">
+                            <div class="form-group-row">
+                                <div class="form-group">
+                                    <label for="p-name">Nombre y Apellido Completo *</label>
+                                    <input type="text" id="p-name" class="input-ctrl" required placeholder="Ej: Camila Fernández">
+                                </div>
+                                <div class="form-group">
+                                    <label for="p-phone">Teléfono / WhatsApp de Contacto *</label>
+                                    <input type="tel" id="p-phone" class="input-ctrl" required placeholder="Ej: +54 9 11 4455-8899">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group-row">
+                                <div class="form-group">
+                                    <label for="p-email">Correo Electrónico *</label>
+                                    <input type="email" id="p-email" class="input-ctrl" required placeholder="Ej: camila@email.com">
+                                </div>
+                                <div class="form-group">
+                                    <label for="p-office">Lugar / Modalidad de Atención *</label>
+                                    <select id="p-office" class="input-ctrl" required>
+                                        <!-- Inyectado dinámicamente -->
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Motivo de Consulta -->
+                            <div class="form-group">
+                                <label>Motivo principal de consulta (Opcional - Selecciona una o más opciones):</label>
+                                <div class="reason-chips-grid">
+                                    <button type="button" class="reason-chip" onclick="bookingFlow.toggleReasonChip(this, 'Ansiedad / Estrés')">🌱 Ansiedad / Estrés</button>
+                                    <button type="button" class="reason-chip" onclick="bookingFlow.toggleReasonChip(this, 'Autoestima / Seguridad')">✨ Autoestima</button>
+                                    <button type="button" class="reason-chip" onclick="bookingFlow.toggleReasonChip(this, 'Duelo o Separación')">🍂 Duelo / Separación</button>
+                                    <button type="button" class="reason-chip" onclick="bookingFlow.toggleReasonChip(this, 'Relaciones y Vínculos')">💬 Vínculos / Pareja</button>
+                                    <button type="button" class="reason-chip" onclick="bookingFlow.toggleReasonChip(this, 'Crecimiento Personal')">🧭 Crecimiento Personal</button>
+                                    <button type="button" class="reason-chip" onclick="bookingFlow.toggleReasonChip(this, 'Crianza y Familia')">🏡 Crianza / Familia</button>
+                                    <button type="button" class="reason-chip" onclick="bookingFlow.toggleReasonChip(this, 'Otro')">📝 Otro motivo</button>
+                                </div>
+                                <input type="hidden" id="p-reason-selected" value="">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="p-notes">Aclaraciones o comentarios para la psicóloga (Opcional)</label>
+                                <textarea id="p-notes" class="input-ctrl" rows="3" placeholder="Si es tu primera vez o deseas adelantar algún detalle importante para el encuadre terapéutico, escríbelo aquí."></textarea>
+                            </div>
+
+                            <div class="ethics-notice-box">
+                                <span style="font-size: 20px;">🛡️</span>
+                                <div>
+                                    <strong>Compromiso Ético & Política de Cancelación:</strong>
+                                    <span id="booking-policy-text">Por favor, recuerda avisar con al menos 24 horas de anticipación ante cualquier eventualidad o necesidad de reprogramar tu sesión.</span>
+                                </div>
+                            </div>
+                            
+                            <div class="booking-actions">
+                                <button type="button" class="btn btn-secondary" onclick="bookingFlow.goToStep(2)">← Volver a Horarios</button>
+                                <button type="submit" class="btn btn-accent" id="btn-confirm-booking">
+                                    Confirmar Mi Reserva ✨
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Confirmación (Éxito) -->
+                    <div id="booking-success" class="success-screen hidden animate-fade-in">
+                        <div class="success-check-circle">✓</div>
+                        <h2 class="success-title font-heading">¡Turno Agendado con Éxito!</h2>
+                        <p class="success-subtitle">Tu cita ha sido registrada. A continuación tienes el comprobante con todos los detalles de tu sesión:</p>
+                        
+                        <div class="receipt-card" id="booking-receipt-container">
+                            <!-- Inyectado dinámicamente -->
+                        </div>
+                        
+                        <div class="text-center" style="display: flex; flex-direction: column; gap: 14px; align-items: center; justify-content: center;">
+                            <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+                                <a href="#" id="whatsapp-confirmation-link" target="_blank" class="btn btn-whatsapp">
+                                    💬 Notificar a la Psicóloga por WhatsApp
+                                </a>
+                                <a href="#" id="google-calendar-link" target="_blank" class="btn btn-secondary">
+                                    📅 Añadir a mi Google Calendar
+                                </a>
+                                <button class="btn btn-outline" onclick="bookingFlow.resetFlow()">
+                                    Agendar Otro Turno
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </article>
+
+            </div>
+        </section>
+
+        <!-- ==========================================================================
+             SECCIÓN ADMINISTRACIÓN: PANEL DE CONTROL DE LA PSICÓLOGA
+             ========================================================================== -->
+        <section id="view-admin" class="view-section animate-fade-in-up">
+            
+            <!-- Login Inicial -->
+            <div class="login-card" id="admin-login-card">
+                <div class="login-header">
+                    <div style="font-size: 38px; margin-bottom: 8px;">🔐</div>
+                    <h2 class="login-title font-heading">Acceso Profesional</h2>
+                    <p class="login-subtitle">Introduce tu contraseña para acceder al consultorio</p>
+                </div>
+                <form id="admin-login-form" onsubmit="adminDashboard.handleLogin(event)">
+                    <div class="form-group">
+                        <label for="login-password">Contraseña (Demo: admin)</label>
+                        <input type="password" id="login-password" class="input-ctrl" required placeholder="••••••••">
+                    </div>
+                    <div id="login-error-msg" class="mb-sm text-danger hidden" style="font-size: 13px; font-weight: 500;">
+                        ❌ Contraseña incorrecta. (Prueba con: admin)
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full mt-sm">Entrar al Panel</button>
+                </form>
+            </div>
+
+            <!-- Panel de Control Principal (Visible tras Login) -->
+            <div class="dashboard-layout hidden" id="admin-dashboard-container">
+                
+                <!-- Menú Lateral del Dashboard -->
+                <aside class="dashboard-nav">
+                    <button class="db-nav-btn active" data-tab="appointments" onclick="adminDashboard.switchTab('appointments')">
+                        📅 Agenda de Citas
+                    </button>
+                    <button class="db-nav-btn" data-tab="patients" onclick="adminDashboard.switchTab('patients')">
+                        👥 Fichero & Notas Clínicas
+                    </button>
+                    <button class="db-nav-btn" data-tab="offices" onclick="adminDashboard.switchTab('offices')">
+                        🏢 Mis Consultorios & Sedes
+                    </button>
+                    <button class="db-nav-btn" data-tab="availability" onclick="adminDashboard.switchTab('availability')">
+                        ⏰ Horarios & Días
+                    </button>
+                    <button class="db-nav-btn" data-tab="services" onclick="adminDashboard.switchTab('services')">
+                        💼 Mis Servicios
+                    </button>
+                    <button class="db-nav-btn" data-tab="settings" onclick="adminDashboard.switchTab('settings')">
+                        ⚙️ Perfil & Configuración
+                    </button>
+                    
+                    <button class="db-nav-btn mt-lg text-danger" style="margin-top:auto;" onclick="adminDashboard.handleLogout()">
+                        🚪 Cerrar Sesión
+                    </button>
+                </aside>
+
+                <!-- Panel de Contenido Principal -->
+                <main class="dashboard-main">
+                    
+                    <!-- Banner de Resumen y Acciones Rápidas -->
+                    <div class="db-overview-banner">
+                        <div>
+                            <h3 class="db-overview-title" id="db-greeting-title">¡Hola Licenciada!</h3>
+                            <p class="db-overview-sub" id="db-greeting-date">Bienvenida a tu espacio de gestión terapéutica.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="btn btn-accent btn-sm" onclick="appUtils.copyPatientLink()">
+                                📋 Copiar Link para Pacientes
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="adminDashboard.openManualBookingModal()">
+                                ＋ Nueva Cita Manual
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Métricas Clave del Consultorio -->
+                    <div class="db-metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-val" id="metric-today-count">0</div>
+                            <div class="metric-label">Sesiones Hoy</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-val" id="metric-upcoming-count">0</div>
+                            <div class="metric-label">Próximos Turnos</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-val" id="metric-patients-count">0</div>
+                            <div class="metric-label">Pacientes en Fichero</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-val" id="metric-completed-count">0</div>
+                            <div class="metric-label">Sesiones Realizadas</div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 1: AGENDA DE CITAS -->
+                    <div id="db-section-appointments" class="db-section active">
+                        <div class="db-header">
+                            <h3 class="db-title font-heading">Agenda de Turnos</h3>
+                        </div>
+                        
+                        <!-- Filtros de citas -->
+                        <div class="agenda-filters">
+                            <button class="filter-pill active" data-filter="todos" onclick="adminDashboard.filterAppointments('todos')">Todos</button>
+                            <button class="filter-pill" data-filter="hoy" onclick="adminDashboard.filterAppointments('hoy')">Hoy</button>
+                            <button class="filter-pill" data-filter="proximos" onclick="adminDashboard.filterAppointments('proximos')">Próximos</button>
+                            <button class="filter-pill" data-filter="pendientes" onclick="adminDashboard.filterAppointments('pendientes')">Pendientes</button>
+                            <button class="filter-pill" data-filter="completados" onclick="adminDashboard.filterAppointments('completados')">Completados</button>
+                            <button class="filter-pill" data-filter="cancelados" onclick="adminDashboard.filterAppointments('cancelados')">Cancelados</button>
+                        </div>
+
+                        <!-- Lista de citas -->
+                        <div class="appointments-list" id="db-appointments-list">
+                            <!-- Inyectado dinámicamente -->
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: FICHERO DE PACIENTES & NOTAS CLÍNICAS PRIVADAS -->
+                    <div id="db-section-patients" class="db-section">
+                        <div class="db-header">
+                            <h3 class="db-title font-heading">Fichero de Pacientes & Notas de Evolución</h3>
+                        </div>
+                        
+                        <p class="mb-md text-muted">Gestiona el historial de consultas de cada paciente y mantén tus notas terapéuticas de evolución de forma privada y segura:</p>
+                        
+                        <!-- Barra de Búsqueda -->
+                        <div class="search-bar">
+                            <input type="text" id="patient-search-input" class="input-ctrl" placeholder="🔍 Buscar paciente por nombre, teléfono o email..." oninput="adminDashboard.renderPatientsTab()">
+                        </div>
+                        
+                        <div class="patients-list" id="db-patients-container">
+                            <!-- Tarjetas de Pacientes inyectadas con JS -->
+                        </div>
+                    </div>
+
+                    <!-- TAB: MIS CONSULTORIOS & SEDES -->
+                    <div id="db-section-offices" class="db-section">
+                        <div class="db-header">
+                            <h3 class="db-title font-heading">Consultorios y Sedes de Atención</h3>
+                            <button class="btn btn-primary btn-sm" onclick="adminDashboard.openOfficeModal(null)">
+                                ＋ Nuevo Consultorio / Sede
+                            </button>
+                        </div>
+                        <p class="mb-lg text-muted">Administra los espacios donde atiendes a tus pacientes (sedes presenciales o modalidad online), sus direcciones completas, timbres e indicaciones de llegada:</p>
+                        
+                        <div class="offices-grid" id="db-offices-container">
+                            <!-- Inyectado dinámicamente con JS -->
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: HORARIOS & DISPONIBILIDAD -->
+                    <div id="db-section-availability" class="db-section">
+                        <div class="db-header">
+                            <h3 class="db-title font-heading">Disponibilidad y Días de Atención</h3>
+                            <button class="btn btn-primary btn-sm" onclick="adminDashboard.saveAvailabilitySettings()">
+                                Guardar Horarios
+                            </button>
+                        </div>
+                        
+                        <p class="mb-lg text-muted">Configura los días laborables, franjas horarias y el consultorio o modalidad asignada a cada horario:</p>
+                        
+                        <div class="avail-days-grid" id="db-availability-list" style="display:flex; flex-direction:column; gap:16px;">
+                            <!-- Inyectado dinámicamente -->
+                        </div>
+
+                        <!-- Bloqueador de Fechas Específicas -->
+                        <div class="google-sync-guide-card" style="margin-top: 32px;">
+                            <h4 class="font-heading" style="margin-bottom: 6px;">Feriados, Congresos o Vacaciones Bloqueadas</h4>
+                            <p class="text-muted" style="font-size: 13px; margin-bottom: 14px;">Elige fechas en las que el consultorio permanecerá cerrado para que ningún paciente pueda reservar:</p>
+                            
+                            <div class="form-group-row" style="max-width: 480px;">
+                                <div class="form-group">
+                                    <label for="block-date-input">Fecha a Bloquear</label>
+                                    <input type="date" id="block-date-input" class="input-ctrl">
+                                </div>
+                                <div class="form-group" style="display:flex; align-items:flex-end;">
+                                    <button class="btn btn-accent w-full" onclick="adminDashboard.addBlockedDate()">Bloquear Día</button>
+                                </div>
+                            </div>
+
+                            <div class="blocked-dates-list" id="db-blocked-dates-container" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;">
+                                <!-- Tags inyectados aquí -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 4: SERVICIOS PSICOLÓGICOS -->
+                    <div id="db-section-services" class="db-section">
+                        <div class="db-header">
+                            <h3 class="db-title font-heading">Servicios y Aranceles Terapéuticos</h3>
+                            <button class="btn btn-primary btn-sm" onclick="adminDashboard.openServiceModal(null)">
+                                ＋ Nuevo Servicio
+                            </button>
+                        </div>
+                        <p class="mb-lg text-muted">Configura las modalidades de consulta, duraciones y honorarios que se muestran a tus pacientes:</p>
+                        
+                        <div class="service-list" id="db-services-container">
+                            <!-- Inyectado dinámicamente con JS -->
+                        </div>
+                    </div>
+
+                    <!-- TAB 5: PERFIL & CONFIGURACIÓN -->
+                    <div id="db-section-settings" class="db-section">
+                        <div class="db-header">
+                            <h3 class="db-title font-heading">Configuración del Perfil Profesional</h3>
+                            <button class="btn btn-primary btn-sm" onclick="adminDashboard.saveProfileSettings()">
+                                Guardar Cambios
+                            </button>
+                        </div>
+                        
+                        <form id="profile-settings-form" onsubmit="event.preventDefault()">
+                            
+                            <!-- Subida de Foto Personalizada -->
+                            <div class="avatar-upload-box">
+                                <img src="" alt="Avatar actual" id="conf-avatar-preview" class="avatar-preview-circle">
+                                <div class="avatar-upload-info">
+                                    <label style="font-weight: 700; margin-bottom: 4px; display:block;">Foto de Perfil Profesional</label>
+                                    <p class="text-muted" style="font-size: 12.5px; margin-bottom: 10px;">Sube una foto propia desde tu computadora o pega un enlace directo:</p>
+                                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                                        <input type="file" id="conf-avatar-file" accept="image/*" style="display:none;" onchange="adminDashboard.handlePhotoUpload(event)">
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('conf-avatar-file').click()">
+                                            📁 Subir Foto desde mi PC
+                                        </button>
+                                        <input type="url" id="conf-avatar" class="input-ctrl" style="max-width: 320px; font-size: 12px; padding: 6px 10px;" placeholder="O pega URL de imagen (https://...)" onchange="adminDashboard.previewAvatarUrl(this.value)">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group-row">
+                                <div class="form-group">
+                                    <label for="conf-name">Nombre y Título *</label>
+                                    <input type="text" id="conf-name" class="input-ctrl" required placeholder="Ej: Lic. Lucía Menéndez">
+                                </div>
+                                <div class="form-group">
+                                    <label for="conf-specialty">Especialidad & Matrícula *</label>
+                                    <input type="text" id="conf-specialty" class="input-ctrl" required placeholder="Ej: Psicóloga Clínica (M.N. 52.840)">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="conf-bio">Presentación / Bio Cálida *</label>
+                                <textarea id="conf-bio" class="input-ctrl" rows="3" required placeholder="Breve descripción de tu enfoque y propuesta terapéutica..."></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="conf-location">Dirección / Localidades de Consultorio *</label>
+                                <input type="text" id="conf-location" class="input-ctrl" required placeholder="Ej: Consultorio Recoleta / Palermo y Atención Online">
+                            </div>
+                            
+                            <div class="form-group-row">
+                                <div class="form-group">
+                                    <label for="conf-email">Correo Electrónico de Contacto *</label>
+                                    <input type="email" id="conf-email" class="input-ctrl" required placeholder="contacto@psicologia.com">
+                                </div>
+                                <div class="form-group">
+                                    <label for="conf-phone">WhatsApp para Notificaciones y Recordatorios *</label>
+                                    <input type="tel" id="conf-phone" class="input-ctrl" required placeholder="+54 9 11 5432-8765">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="conf-cancellation">Política de Cancelación y Reprogramación</label>
+                                <input type="text" id="conf-cancellation" class="input-ctrl" placeholder="Avisar con 24h de anticipación...">
+                            </div>
+
+                            <!-- Consultorios -->
+                            <div class="google-sync-guide-card" style="margin-top: 22px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                                    <div>
+                                        <h4 class="font-heading" style="color:var(--c-primary); margin-bottom:4px;">🏢 Gestión de Consultorios y Sedes</h4>
+                                        <p class="text-muted" style="font-size:12.5px;">Administra tus direcciones físicas, pisos, timbres, notas de llegada y enlaces de videollamada.</p>
+                                    </div>
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="adminDashboard.switchTab('offices')">
+                                        Administrar Consultorios →
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Conexión con Google Sheets & Google Calendar -->
+                            <div class="form-group" style="border-top: 1px solid var(--c-border); padding-top: 20px; margin-top: 20px;">
+                                <label for="conf-sync-url" style="font-weight: 700;">URL de Sincronización Google Sheets & Google Calendar [Opcional]</label>
+                                <input type="url" id="conf-sync-url" class="input-ctrl" placeholder="https://script.google.com/macros/s/.../exec">
+                                <p style="font-size: 12px; color: var(--c-text-muted); margin-top: 6px;">
+                                    Si ingresas la URL de tu Google Script, los turnos se guardarán automáticamente en tu hoja de Google Sheets y <strong>se agendarán en tu Google Calendar personal</strong> con avisos en tu teléfono celular. Si lo dejas vacío, la app funciona en modo local.
+                                </p>
+
+                                <!-- Guía Rápida Google Calendar -->
+                                <details class="google-sync-guide-card">
+                                    <summary style="font-size: 13px; font-weight: 700; color: var(--c-info); cursor: pointer;">
+                                        ✨ Ver Guía de 3 Pasos para conectar tu Google Calendar gratis
+                                    </summary>
+                                    <div style="margin-top: 14px;">
+                                        <div class="sync-step">
+                                            <span class="sync-step-num">1</span>
+                                            <div>Crea una hoja de cálculo nueva en Google Sheets (ej: <em>Mis Turnos Psico</em>) y abre <strong>Extensiones → Apps Script</strong>.</div>
+                                        </div>
+                                        <div class="sync-step">
+                                            <span class="sync-step-num">2</span>
+                                            <div>Pega el código incluido en el archivo <code>google_apps_script.js</code> de este proyecto y haz clic en Guardar.</div>
+                                        </div>
+                                        <div class="sync-step">
+                                            <span class="sync-step-num">3</span>
+                                            <div>Haz clic en <strong>Implementar → Nueva implementación → Aplicación web</strong> (Acceso: Cualquiera). Copia la URL que termina en <code>/exec</code> y pégala arriba. ¡Listo!</div>
+                                        </div>
+                                    </div>
+                                </details>
+                            </div>
+
+                            <!-- Backups y Respaldo -->
+                            <div class="google-sync-guide-card" style="margin-top: 28px;">
+                                <h4 class="font-heading" style="margin-bottom: 6px;">Copias de Seguridad y Respaldo</h4>
+                                <p class="text-muted" style="font-size: 12.5px; margin-bottom: 14px;">
+                                    Descarga un archivo con toda tu información (agenda, pacientes, notas clínicas privadas y configuración) para tenerlo a salvo o migrar de computadora:
+                                </p>
+                                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="db.exportBackup()">
+                                        💾 Descargar Backup Completo (JSON)
+                                    </button>
+                                    <input type="file" id="backup-file-input" accept=".json" style="display:none;" onchange="adminDashboard.handleImportBackup(event)">
+                                    <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('backup-file-input').click()">
+                                        📂 Restaurar desde Backup
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="text-center" style="margin-top: 32px;">
+                                <button type="button" class="btn btn-danger btn-sm" onclick="if(confirm('¿Seguro que deseas restablecer todos los datos iniciales? Se borrarán tus configuraciones y turnos.')) db.resetToDefaults()">
+                                    ⚠️ Restablecer Datos de Demostración
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                </main>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==========================================================================
+         MODALES Y VENTANAS DIALOG
+         ========================================================================== -->
+    <div class="modal-overlay" id="modal-overlay" onclick="adminDashboard.closeAllModals()"></div>
+
+    <!-- Modal: Agregar/Editar Servicio Terapéutico -->
+    <div class="dialog-modal" id="modal-service" role="dialog" aria-modal="true">
+        <div class="modal-title-row">
+            <h3 id="service-modal-title">Añadir Servicio Terapéutico</h3>
+            <button class="modal-close-btn" onclick="adminDashboard.closeServiceModal()">×</button>
+        </div>
+        <form id="service-form" onsubmit="adminDashboard.saveService(event)">
+            <input type="hidden" id="service-edit-id">
+            
+            <div class="form-group">
+                <label for="srv-form-name">Nombre del Servicio / Modalidad *</label>
+                <input type="text" id="srv-form-name" class="input-ctrl" required placeholder="Ej: Sesión Individual TCC">
+            </div>
+
+            <div class="form-group">
+                <label for="srv-form-modality">Modalidad de Atención</label>
+                <input type="text" id="srv-form-modality" class="input-ctrl" placeholder="Ej: Presencial u Online">
+            </div>
+            
+            <div class="form-group-row">
+                <div class="form-group">
+                    <label for="srv-form-duration">Duración (Minutos) *</label>
+                    <input type="number" id="srv-form-duration" class="input-ctrl" required min="15" max="240" placeholder="Ej: 50">
+                </div>
+                <div class="form-group">
+                    <label for="srv-form-price">Arancel / Honorario (ARS) *</label>
+                    <input type="number" id="srv-form-price" class="input-ctrl" required min="0" placeholder="Ej: 18000">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="srv-form-desc">Descripción del Encuadre *</label>
+                <textarea id="srv-form-desc" class="input-ctrl" rows="3" required placeholder="Breve detalle de qué se aborda en la sesión..."></textarea>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="adminDashboard.closeServiceModal()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar Servicio</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Modal: Agregar/Editar Consultorio o Sede -->
+    <div class="dialog-modal" id="modal-office" role="dialog" aria-modal="true">
+        <div class="modal-title-row">
+            <h3 id="office-modal-title">Añadir Consultorio / Sede</h3>
+            <button class="modal-close-btn" onclick="adminDashboard.closeOfficeModal()">×</button>
+        </div>
+        <form id="office-form" onsubmit="adminDashboard.saveOffice(event)">
+            <input type="hidden" id="office-edit-id">
+            
+            <div class="form-group">
+                <label for="off-form-name">Nombre de la Sede / Consultorio *</label>
+                <input type="text" id="off-form-name" class="input-ctrl" required placeholder="Ej: Consultorio Palermo Soho">
+            </div>
+
+            <div class="form-group-row">
+                <div class="form-group">
+                    <label for="off-form-type">Modalidad *</label>
+                    <select id="off-form-type" class="input-ctrl" required onchange="adminDashboard.handleOfficeTypeChange(this.value)">
+                        <option value="presencial">🏢 Presencial (Consultorio físico)</option>
+                        <option value="online">💻 Online (Videollamada Google Meet / Zoom)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="off-form-maps">Enlace Google Maps (Opcional)</label>
+                    <input type="url" id="off-form-maps" class="input-ctrl" placeholder="https://maps.google.com/...">
+                </div>
+            </div>
+
+            <div class="form-group" id="off-group-address">
+                <label for="off-form-address">Dirección Completa *</label>
+                <input type="text" id="off-form-address" class="input-ctrl" required placeholder="Ej: Av. Santa Fe 3420, Piso 3 Depto B, Palermo, CABA">
+            </div>
+
+            <div class="form-group">
+                <label for="off-form-instructions">Indicaciones de Acceso / Notas para el Paciente *</label>
+                <textarea id="off-form-instructions" class="input-ctrl" rows="3" required placeholder="Ej: Timbre 'Consultorios 3B'. A 2 cuadras del subte D. Tocar timbre 5 min antes."></textarea>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="adminDashboard.closeOfficeModal()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar Sede</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Modal: Reservar Cita Manualmente (Psicóloga) -->
+    <div class="dialog-modal" id="modal-manual-booking" role="dialog" aria-modal="true">
+        <div class="modal-title-row">
+            <h3>Agendar Turno Manualmente</h3>
+            <button class="modal-close-btn" onclick="adminDashboard.closeManualBookingModal()">×</button>
+        </div>
+        <form id="manual-booking-form" onsubmit="adminDashboard.saveManualBooking(event)">
+            
+            <div class="form-group">
+                <label for="m-service">Servicio Terapéutico *</label>
+                <select id="m-service" class="input-ctrl" required>
+                    <!-- Inyectado dinámicamente -->
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="m-office">Consultorio / Modalidad *</label>
+                <select id="m-office" class="input-ctrl" required>
+                    <!-- Inyectado dinámicamente -->
+                </select>
+            </div>
+
+            <div class="form-group-row">
+                <div class="form-group">
+                    <label for="m-date">Fecha *</label>
+                    <input type="date" id="m-date" class="input-ctrl" required onchange="adminDashboard.updateManualBookingTimeSlots()">
+                </div>
+                <div class="form-group">
+                    <label for="m-time">Hora *</label>
+                    <select id="m-time" class="input-ctrl" required>
+                        <option value="">Selecciona fecha primero...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group-row">
+                <div class="form-group">
+                    <label for="m-pat-name">Nombre y Apellido Paciente *</label>
+                    <input type="text" id="m-pat-name" class="input-ctrl" required placeholder="Nombre del paciente">
+                </div>
+                <div class="form-group">
+                    <label for="m-pat-phone">WhatsApp Paciente *</label>
+                    <input type="tel" id="m-pat-phone" class="input-ctrl" required placeholder="+54 9 ...">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="m-pat-email">Email Paciente *</label>
+                <input type="email" id="m-pat-email" class="input-ctrl" required placeholder="paciente@email.com">
+            </div>
+
+            <div class="form-group">
+                <label for="m-reason">Motivo de Consulta (Opcional)</label>
+                <input type="text" id="m-reason" class="input-ctrl" placeholder="Ej: Ansiedad, derivación, etc.">
+            </div>
+
+            <div class="form-group">
+                <label for="m-notes">Notas Privadas / Observaciones</label>
+                <textarea id="m-notes" class="input-ctrl" rows="2" placeholder="Detalles previos o acuerdos de la sesión..."></textarea>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="adminDashboard.closeManualBookingModal()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Registrar Turno en Agenda</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Modal: Nueva Nota Clínica de Evolución -->
+    <div class="dialog-modal" id="modal-clinical-note" role="dialog" aria-modal="true">
+        <div class="modal-title-row">
+            <h3>🔒 Nueva Nota de Evolución Terapéutica</h3>
+            <button class="modal-close-btn" onclick="adminDashboard.closeClinicalNoteModal()">×</button>
+        </div>
+        <form id="clinical-note-form" onsubmit="adminDashboard.saveClinicalNote(event)">
+            <input type="hidden" id="cn-patient-email">
+            
+            <div class="form-group">
+                <label>Paciente:</label>
+                <div id="cn-patient-display" style="font-weight: 700; color: var(--c-primary); font-size: 15px;"></div>
+            </div>
+
+            <div class="form-group-row">
+                <div class="form-group">
+                    <label for="cn-date">Fecha de Sesión *</label>
+                    <input type="date" id="cn-date" class="input-ctrl" required>
+                </div>
+                <div class="form-group">
+                    <label for="cn-session-num">N° de Sesión</label>
+                    <input type="number" id="cn-session-num" class="input-ctrl" min="1" placeholder="Ej: 3">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="cn-title">Título / Foco de la Sesión *</label>
+                <input type="text" id="cn-title" class="input-ctrl" required placeholder="Ej: Sesión 3: Reestructuración de pensamientos catastrofistas">
+            </div>
+
+            <div class="form-group">
+                <label for="cn-content">Notas Clínicas Confidenciales *</label>
+                <textarea id="cn-content" class="input-ctrl" rows="5" required placeholder="Evolución del paciente, temas abordados, técnicas aplicadas, acuerdos y tareas intersesión..."></textarea>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="adminDashboard.closeClinicalNoteModal()">Cancelar</button>
+                <button type="submit" class="btn btn-accent">Guardar en Ficha Confidencial</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Toast Notification Flotante -->
+    <div id="toast-notification" class="toast-msg">
+        <span id="toast-text">Mensaje</span>
+    </div>
+
+    <!-- Scripts de la Aplicación -->
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
