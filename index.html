@@ -26,6 +26,10 @@
             
             <!-- Acciones del Encabezado -->
             <div class="header-actions">
+                <button class="btn-share-link" onclick="appUtils.copyPatientLink()" title="Copiar enlace directo para enviar a pacientes">
+                    📋 Copiar Link Pacientes
+                </button>
+
                 <!-- Switcher de Vistas -->
                 <div class="view-toggle-container">
                     <button class="toggle-btn active" id="toggle-patient-btn" onclick="router.navigate('patient')">
@@ -239,6 +243,13 @@
 
                 </article>
 
+            </div>
+
+            <!-- Enlace discreto para ingresar al panel profesional desde cualquier dispositivo -->
+            <div style="text-align: center; padding: 26px 12px 14px; opacity: 0.55; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.55">
+                <a href="?admin=1" onclick="event.preventDefault(); router.navigate('admin');" style="color: var(--c-text-muted); font-size: 11.5px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;">
+                    <span>🔒</span> <span>Acceso Profesional</span>
+                </a>
             </div>
         </section>
 

@@ -96,7 +96,10 @@ const router = {
             }
         }
         
-        if (isPatientCleanMode) {
+        if (params.has('admin') || params.has('panel')) {
+            document.body.classList.remove('mode-patient-clean');
+            router.navigate('admin');
+        } else if (isPatientCleanMode) {
             document.body.classList.add('mode-patient-clean');
             router.navigate('patient');
         } else {
@@ -105,6 +108,10 @@ const router = {
     },
     navigate: (viewName) => {
         router.currentView = viewName;
+        
+        if (viewName === 'admin') {
+            document.body.classList.remove('mode-patient-clean');
+        }
         
         const btnPat = document.getElementById('toggle-patient-btn');
         const btnAdm = document.getElementById('toggle-admin-btn');
