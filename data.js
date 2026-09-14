@@ -21,7 +21,7 @@ const DEFAULT_OFFICES = [
         name: "Consultorio Recoleta",
         type: "presencial",
         address: "Av. Callao 1520, Piso 2 Consultorio 5, Recoleta, CABA",
-        instructions: "Edificio profesional con ascensor. Anunciarse en recepción/portería como paciente de la Lic. Lucía Menéndez.",
+        instructions: "Edificio profesional con ascensor. Anunciarse en recepción/portería como paciente de la Lic. Lucía V. Nuñez.",
         mapsUrl: "https://maps.google.com/?q=Av.+Callao+1520,+Recoleta,+CABA"
     },
     {
@@ -36,13 +36,13 @@ const DEFAULT_OFFICES = [
 
 // Perfil por defecto de la psicóloga
 const DEFAULT_SPECIALIST = {
-    name: "Lic. Lucía Menéndez",
-    specialty: "Psicóloga Clínica (M.N. 52.840 / M.P. 89.120)",
-    bio: "Especialista en Psicoterapia Individual, de Pareja y Vínculos con enfoque Cognitivo-Conductual (TCC) e Integrativo. Brindo un espacio cálido, seguro y confidencial para acompañarte en tu bienestar emocional, manejo de ansiedad, procesos de cambio y autoconocimiento.",
+    name: "Lic. Lucía V. Nuñez",
+    specialty: "Psicóloga Clínica & Posgrado en Sexología Clínica",
+    bio: "Especialista en Psicoterapia Individual, de Pareja y Vínculos, y Sexología Clínica. Brindo un espacio cálido, seguro y confidencial para acompañarte en tu bienestar emocional, procesos de cambio y autoconocimiento.",
     location: "Consultorio Palermo Soho / Recoleta y Atención Online",
-    email: "lic.luciamenendez@psicologia.com",
+    email: "lic.lucianunez@psicologia.com",
     phone: "+54 9 11 5432-8765",
-    avatar: "https://images.unsplash.com/photo-1594824813576-92c4b82d49b2?auto=format&fit=crop&q=80&w=300",
+    avatar: "lucia_perfil.jpg",
     offices: [
         "Consultorio Palermo Soho",
         "Consultorio Recoleta",
@@ -258,6 +258,18 @@ const db = {
         const spec = db.get('specialist', DEFAULT_SPECIALIST);
         let updated = false;
         
+        // El nombre oficial permanece siempre protegido y fijo
+        if (!spec.name || spec.name.includes("Menéndez")) {
+            spec.name = "Lic. Lucía V. Nuñez";
+            updated = true;
+        }
+
+        // Si el avatar es el placeholder genérico de Unsplash o está vacío, usar su foto real
+        if (!spec.avatar || spec.avatar.includes("unsplash.com")) {
+            spec.avatar = "lucia_perfil.jpg";
+            updated = true;
+        }
+
         // Garantizar sincronización de consultorios
         const offices = db.getOffices();
         spec.offices = offices.map(o => o.name);

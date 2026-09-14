@@ -129,26 +129,71 @@ const router = {
 const syncService = {
     isLoading: false,
     
-    // Carga turnos en tiempo real desde Google Sheets si está configurada la URL
-    loadFromServer: async () => {
+    // Carga turnos y configuración completa en tiempo real desde Google Sheets
+    loadFromServer: async (showFeedback = false) => {
         const spec = window.db.getSpecialist();
-        if (!spec.syncUrl) return;
+        if (!spec.syncUrl) {
+            if (showFeedback) appUtils.showToast("⚠️ Primero ingresa y guarda la URL de Google Sheets");
+            return;
+        }
         
         syncService.isLoading = true;
+        const statusEl = document.getElementById('sync-sheets-status');
+        if (statusEl) statusEl.innerHTML = '<span style="color:var(--c-info);">⏳ Conectando con Google Sheets...</span>';
+
         try {
-            const response = await fetch(spec.syncUrl + '?action=getAppointments');
+            const response = await fetch(spec.syncUrl + '?action=getAllData');
             if (response.ok) {
                 const data = await response.json();
-                if (Array.isArray(data) && data.length > 0) {
-                    window.db.saveAppointments(data);
-                    if (router.currentView === 'admin') {
-                        adminDashboard.renderActiveTab();
-                    }
-                    console.log("✓ Turnos sincronizados exitosamente desde Google Sheets.");
+                
+                // 1. Sincronizar Turnos
+                if (data.appointments && Array.isArray(data.appointments)) {
+                    window.db.saveAppointments(data.appointments);
+                    console.log("✓ Turnos sincronizados desde Google Sheets (" + data.appointments.length + ").");
                 }
+                
+                // 2. Sincronizar Configuración (Perfil, Servicios, Sedes, Disponibilidad)
+                if (data.config && typeof data.config === 'object') {
+                    if (data.config.specialist) {
+                        const mergedSpec = { ...data.config.specialist };
+                        // Mantener siempre el nombre oficial de Lucía y la syncUrl actual
+                        mergedSpec.name = "Lic. Lucía V. Nuñez";
+                        mergedSpec.syncUrl = spec.syncUrl;
+                        if (!mergedSpec.avatar || mergedSpec.avatar.includes("unsplash")) {
+                            mergedSpec.avatar = "lucia_perfil.jpg";
+                        }
+                        window.db.saveSpecialist(mergedSpec);
+                    }
+                    if (data.config.services && Array.isArray(data.config.services) && data.config.services.length > 0) {
+                        window.db.saveServices(data.config.services);
+                    }
+                    if (data.config.offices && Array.isArray(data.config.offices) && data.config.offices.length > 0) {
+                        window.db.saveOffices(data.config.offices);
+                    }
+                    if (data.config.availability && Array.isArray(data.config.availability) && data.config.availability.length > 0) {
+                        window.db.saveAvailability(data.config.availability);
+                    }
+                    console.log("✓ Base de datos actualizada desde Google Sheets.");
+                }
+
+                // Refrescar vistas activas
+                bookingFlow.renderSpecialistInfo();
+                bookingFlow.renderServicesStep();
+                if (calendarUI && bookingFlow.state.step === 2) {
+                    calendarUI.render();
+                }
+                if (router.currentView === 'admin') {
+                    adminDashboard.renderActiveTab();
+                }
+
+                const timeStr = new Date().toLocaleTimeString();
+                if (statusEl) statusEl.innerHTML = '<span style="color:var(--c-success);">✓ Sincronizado con Google Sheets (' + timeStr + ')</span>';
+                if (showFeedback) appUtils.showToast("✓ Base de datos actualizada desde Google Sheets");
             }
         } catch (error) {
-            console.warn("Nota: Sincronización remota en espera o URL no accesible:", error);
+            console.warn("Nota: Sincronización remota:", error);
+            if (statusEl) statusEl.innerHTML = '<span style="color:var(--c-warning);">⚠️ En espera de conexión con Google Sheets</span>';
+            if (showFeedback) appUtils.showToast("⚠️ No se pudo conectar con Google Sheets");
         } finally {
             syncService.isLoading = false;
         }
@@ -168,7 +213,46 @@ const syncService = {
             });
             console.log("✓ Turno sincronizado con Google Sheets & Google Calendar.");
         } catch (error) {
-            console.error("Error al sincronizar con Google:", error);
+            console.error("Error al sincronizar turno con Google:", error);
+        }
+    },
+
+    // Envía toda la configuración (perfil, servicios, sedes, disponibilidad) a Google Sheets
+    saveConfigToServer: async (showFeedback = false) => {
+        const spec = window.db.getSpecialist();
+        if (!spec.syncUrl) {
+            if (showFeedback) appUtils.showToast("⚠️ Primero ingresa y guarda la URL de Google Sheets");
+            return;
+        }
+
+        const payload = {
+            type: 'saveConfig',
+            config: {
+                specialist: window.db.getSpecialist(),
+                services: window.db.getServices(),
+                offices: window.db.getOffices(),
+                availability: window.db.getAvailability()
+            }
+        };
+
+        const statusEl = document.getElementById('sync-sheets-status');
+        if (statusEl) statusEl.innerHTML = '<span style="color:var(--c-info);">⏳ Guardando en Google Sheets...</span>';
+
+        try {
+            await fetch(spec.syncUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            console.log("✓ Configuración enviada a Google Sheets.");
+            const timeStr = new Date().toLocaleTimeString();
+            if (statusEl) statusEl.innerHTML = '<span style="color:var(--c-success);">✓ Guardado en Google Sheets (' + timeStr + ')</span>';
+            if (showFeedback) appUtils.showToast("✓ Base de datos guardada en tu Google Sheet");
+        } catch (error) {
+            console.error("Error al guardar config en Google Sheets:", error);
+            if (statusEl) statusEl.innerHTML = '<span style="color:var(--c-danger);">❌ Error al conectar con Google Sheets</span>';
+            if (showFeedback) appUtils.showToast("❌ Error al guardar en Google Sheets");
         }
     }
 };
@@ -204,7 +288,7 @@ const bookingFlow = {
         document.getElementById('patient-spec-name').textContent = spec.name;
         document.getElementById('patient-spec-specialty').textContent = spec.specialty;
         document.getElementById('patient-spec-bio').textContent = spec.bio;
-        document.getElementById('patient-spec-avatar').src = spec.avatar || 'https://images.unsplash.com/photo-1594824813576-92c4b82d49b2?auto=format&fit=crop&q=80&w=300';
+        document.getElementById('patient-spec-avatar').src = spec.avatar || 'lucia_perfil.jpg';
         
         // Mostrar sedes activas
         const officesSummary = offices.map(o => o.name).join(' • ');
@@ -1232,6 +1316,7 @@ const adminDashboard = {
         adminDashboard.closeOfficeModal();
         adminDashboard.renderOfficesTab();
         bookingFlow.renderSpecialistInfo();
+        syncService.saveConfigToServer();
         appUtils.showToast("✓ Consultorio guardado correctamente");
     },
 
@@ -1245,6 +1330,7 @@ const adminDashboard = {
             window.db.deleteOffice(officeId);
             adminDashboard.renderOfficesTab();
             bookingFlow.renderSpecialistInfo();
+            syncService.saveConfigToServer();
             appUtils.showToast("Consultorio eliminado");
         }
     },
@@ -1408,6 +1494,7 @@ const adminDashboard = {
         availability.hours = newHours;
 
         window.db.saveAvailability(availability);
+        syncService.saveConfigToServer();
         appUtils.showToast("✓ Horarios y disponibilidad guardados correctamente");
     },
 
@@ -1512,6 +1599,7 @@ const adminDashboard = {
         adminDashboard.closeServiceModal();
         adminDashboard.renderServicesTab();
         bookingFlow.renderServicesList();
+        syncService.saveConfigToServer();
         appUtils.showToast("✓ Servicio guardado exitosamente");
     },
 
@@ -1521,6 +1609,7 @@ const adminDashboard = {
             window.db.saveServices(services);
             adminDashboard.renderServicesTab();
             bookingFlow.renderServicesList();
+            syncService.saveConfigToServer();
             appUtils.showToast("Servicio eliminado");
         }
     },
@@ -1535,7 +1624,7 @@ const adminDashboard = {
         document.getElementById('conf-email').value = spec.email;
         document.getElementById('conf-phone').value = spec.phone;
         document.getElementById('conf-avatar').value = spec.avatar || '';
-        document.getElementById('conf-avatar-preview').src = spec.avatar || 'https://images.unsplash.com/photo-1594824813576-92c4b82d49b2?auto=format&fit=crop&q=80&w=300';
+        document.getElementById('conf-avatar-preview').src = spec.avatar || 'lucia_perfil.jpg';
         document.getElementById('conf-cancellation').value = spec.cancellationPolicy || '';
         document.getElementById('conf-sync-url').value = spec.syncUrl || '';
     },
@@ -1585,7 +1674,8 @@ const adminDashboard = {
                 spec.avatar = base64Data;
                 window.db.saveSpecialist(spec);
                 bookingFlow.renderSpecialistInfo();
-                appUtils.showToast("✓ Foto de perfil actualizada con éxito");
+                syncService.saveConfigToServer();
+                appUtils.showToast("✓ Foto de perfil actualizada y guardada");
             };
             img.src = e.target.result;
         };
@@ -1605,24 +1695,25 @@ const adminDashboard = {
 
         const spec = {
             ...currentSpec,
-            name: document.getElementById('conf-name').value.trim(),
+            name: "Lic. Lucía V. Nuñez", // Nombre oficial permanente y protegido
             specialty: document.getElementById('conf-specialty').value.trim(),
             bio: document.getElementById('conf-bio').value.trim(),
             location: document.getElementById('conf-location').value.trim(),
             email: document.getElementById('conf-email').value.trim(),
             phone: document.getElementById('conf-phone').value.trim(),
-            avatar: inputUrl || previewSrc || currentSpec.avatar,
+            avatar: inputUrl || previewSrc || currentSpec.avatar || "lucia_perfil.jpg",
             cancellationPolicy: document.getElementById('conf-cancellation').value.trim(),
             syncUrl: document.getElementById('conf-sync-url').value.trim()
         };
 
-        if (!spec.name || !spec.specialty || !spec.location || !spec.email || !spec.phone) {
+        if (!spec.specialty || !spec.location || !spec.email || !spec.phone) {
             alert("Por favor completa los campos requeridos marcados con *.");
             return;
         }
 
         window.db.saveSpecialist(spec);
         bookingFlow.renderSpecialistInfo();
+        syncService.saveConfigToServer(true);
         appUtils.showToast("✓ Perfil y configuración guardados");
     },
 
