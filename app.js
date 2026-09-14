@@ -51,14 +51,21 @@ const appUtils = {
     copyPatientLink: () => {
         const isFileProtocol = window.location.protocol === 'file:';
         let url = '';
+        const spec = window.db.getSpecialist();
         
         if (isFileProtocol) {
             url = window.location.href.split('?')[0] + '?paciente=1';
+            if (spec && spec.syncUrl) {
+                url += '&sync=' + encodeURIComponent(spec.syncUrl);
+            }
             prompt("💡 Estás usando la app en modo local (archivo directo). Para que tus pacientes puedan agendarse desde sus celulares, debes publicar estos archivos en internet (por ejemplo en Vercel, Netlify o GitHub Pages gratis).\n\nPara probar la vista de paciente en tu computadora, usa este enlace:", url);
             return;
         }
 
         url = window.location.origin + window.location.pathname + '?paciente=1';
+        if (spec && spec.syncUrl) {
+            url += '&sync=' + encodeURIComponent(spec.syncUrl);
+        }
         if (navigator.clipboard && window.isSecureContext) {
             navigator.clipboard.writeText(url).then(() => {
                 appUtils.showToast("✓ Enlace para pacientes copiado al portapapeles");
@@ -77,6 +84,17 @@ const router = {
     init: () => {
         const params = new URLSearchParams(window.location.search);
         const isPatientCleanMode = params.has('paciente') || params.has('p');
+        
+        if (params.has('sync')) {
+            const syncParam = params.get('sync');
+            if (syncParam) {
+                const spec = window.db.getSpecialist();
+                if (spec && spec.syncUrl !== syncParam) {
+                    spec.syncUrl = syncParam;
+                    window.db.saveSpecialist(spec);
+                }
+            }
+        }
         
         if (isPatientCleanMode) {
             document.body.classList.add('mode-patient-clean');
